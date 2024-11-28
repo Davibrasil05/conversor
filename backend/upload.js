@@ -1,43 +1,43 @@
-const { match } = require('assert')
-const express = require('express')
-const multer = require('multer')
-const path = require('path')
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');  // Importa o pacote CORS
 
+const app = express();
+const PORT = 3000;
 
-const app = express()
-const PORT= 3000
+// Habilita o CORS para todas as origens (ou especificar um domínio)
+app.use(cors());
 
-const storage = multer.diskStorage({
-    destination: (req,file,cb)=>{
-        cb(null,'uploads/')
-    },
-    filename: (req,file,cb)=>{
-        const uniqSufixx = Date.now() + '-'+ Math.round(Math.random()*1E9)
-        cb(null,uniqSufixx + '-'+ file.originalname)
-
-    },
-})
-
-const upload = multer({storage})
-
-//criar pasta de upload caso não existir
-
-
-const fs = require('fs')
-if(!fs.existsSync('uploads')){
-    fs.mkdirSync('uploads')
+// Cria a pasta 'uploads' se não existir
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
 }
 
-//endpoint para o upload
+// Configuração do multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);  // Salva os arquivos na pasta 'uploads'
+    },
+    filename: (req, file, cb) => {
+        const uniqSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqSuffix + '-' + file.originalname);  // Nome único para os arquivos
+    },
+});
 
-app.post('/upload', upload.single('file'),(req,res)=>{
-    if(!req.file){
+const upload = multer({ storage });
+
+// Endpoint para upload
+app.post('/upload', upload.single('file'), (req, res) => {
+    if (!req.file) {
         return res.status(400).send('Nenhum arquivo enviado');
-
     }
-    res.status(200).send(`arquivo ${req.file.filename} enviado com sucesso`)
-})
+    res.status(200).send(`Arquivo ${req.file.filename} enviado com sucesso`);
+});
 
-app.listen(PORT,()=>{
-    console.log(`servidor rodando localhost:${PORT}`)
-})
+// Inicia o servidor
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
