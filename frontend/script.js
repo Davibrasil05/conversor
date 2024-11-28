@@ -1,8 +1,8 @@
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();  // Impede o comportamento padrão do formulário
+    e.preventDefault();  
 
     const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];  // Pega o primeiro arquivo selecionado
+    const file = fileInput.files[0];  
 
     if (!file) {
         alert('Por favor, selecione um arquivo.');
@@ -12,10 +12,10 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Envia o arquivo usando a API fetch
-    fetch('http://localhost:3000/upload', {  // Alterado para a URL completa
+    fetch('http://localhost:3000/upload', {  
         method: 'POST',
         body: formData
+        
     })
     .then(response => {
         if (!response.ok) {

@@ -32,7 +32,7 @@ const upload = multer({ storage });
 // Endpoint para upload
 app.post('/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
-        return res.status(400).send('Nenhum arquivo enviado');
+        return res.status(400).send(' ');
     }
     res.status(200).send(`Arquivo ${req.file.filename} enviado com sucesso`);
 });
