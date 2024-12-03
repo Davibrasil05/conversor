@@ -11,15 +11,16 @@
     <div class="container mt-5">
         <div class="text-center mb-4">
             <h1 class="display-4">Converter Imagem para PDF</h1>
-            <p class="lead">Selecione uma imagem no formato JPEG ou PNG para converter.</p>
+            <p class="lead">Selecione uma ou mais imagens no formato JPEG ou PNG para converter.</p>
         </div>
 
         <div class="card mx-auto shadow" style="max-width: 500px;">
             <div class="card-body">
                 <form id="uploadForm">
                     <div class="mb-3">
-                        <label for="fileInput" class="form-label">Selecione o arquivo:</label>
-                        <input type="file" id="fileInput" name="file" class="form-control" required accept="image/jpeg,image/png">
+                        <label for="fileInput" class="form-label">Selecione os arquivos:</label>
+                        <input type="file" id="fileInput" name="files" class="form-control" accept="image/jpeg,image/png" multiple required>
+                        <small class="form-text text-muted">Você pode selecionar vários arquivos ao mesmo tempo.</small>
                     </div>
                     <div id="alertContainer" class="mb-3"></div>
                     <button type="submit" class="btn btn-primary w-100">Enviar</button>
