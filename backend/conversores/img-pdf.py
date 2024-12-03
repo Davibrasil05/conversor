@@ -2,15 +2,26 @@ from PIL import Image
 from fpdf import FPDF
 import sys
 
-def convert_image_to_pdf(image_path, output_pdf_path):
-    image = Image.open(image_path)
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.image(image_path, x=0, y=0, w=210, h=297)  # Ajusta para tamanho A4
-    pdf.output(output_pdf_path)
+def convert_images_to_pdf(image_paths, output_pdf_path):
+    pdf = FPDF(unit='mm', format='A4')
+    for image_path in image_paths:
+        image = Image.open(image_path)
+        image_width, image_height = image.size
+        aspect_ratio = image_height / image_width
+        pdf_width = 210
+        pdf_height = pdf_width * aspect_ratio
 
-if __name__ == '__main__':
-    for i in range(1, len(sys.argv), 2):
-        input_image = sys.argv[i]  # Caminho da imagem
-        output_pdf = sys.argv[i + 1]  # Caminho do PDF de saída
-        convert_image_to_pdf(input_image, output_pdf)
+        if pdf_height > 297:
+            pdf_height = 297
+            pdf_width = pdf_height / aspect_ratio
+
+        pdf.add_page()
+        pdf.image(image_path, x=0, y=0, w=pdf_width, h=pdf_height)
+
+    pdf.output(output_pdf_path)
+    print(f"PDF salvo em: {output_pdf_path}")
+
+if __name__ == "__main__":
+    image_files = sys.argv[1:-1]  # Lista de imagens recebidas como argumento
+    output_pdf = sys.argv[-1]    # Caminho do PDF final
+    convert_images_to_pdf(image_files, output_pdf)

@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/uploads', {
+            const response = await fetch('http://localhost:3001/upload-multiple', {
                 method: 'POST',
                 body: formData,
             });
