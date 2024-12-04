@@ -4,39 +4,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const alertContainer = document.getElementById('alertContainer');
 
     form.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Impede o envio padrão do formulário
+        event.preventDefault();
 
-        const file = fileInput.files[0];
-        if (!file) {
+        const files = fileInput.files;
+        if (!files.length) {
             showAlert('Nenhum arquivo foi selecionado!', 'danger');
             return;
         }
 
-        const allowedTypes = ['image/jpeg', 'image/png'];
-        if (!allowedTypes.includes(file.type)) {
-            showAlert('Tipo de arquivo inválido! Apenas JPEG e PNG são permitidos.', 'danger');
-            return;
+        const formData = new FormData();
+        for (const file of files) {
+            formData.append('files', file);
         }
 
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-            const response = await fetch('http://localhost:3000/uploads', {
+            const response = await fetch('http://localhost:3001/upload-multiple', {
                 method: 'POST',
                 body: formData,
             });
 
             if (response.ok) {
-                const successMessage = await response.text();
-                showAlert(successMessage, 'success');
+                const result = await response.json();
+                showAlert(result.message.join('<br>'), 'success');
             } else {
                 const errorMessage = await response.text();
                 showAlert(errorMessage, 'danger');
             }
         } catch (error) {
             console.error('Erro:', error);
-            showAlert('Ocorreu um erro ao enviar o arquivo. Tente novamente.', 'danger');
+            showAlert('Ocorreu um erro ao enviar os arquivos. Tente novamente.', 'danger');
         }
     });
 

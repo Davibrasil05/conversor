@@ -6,7 +6,7 @@ const cors = require('cors');
 const { exec } = require('child_process');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 // Habilita CORS para todas as origens
 app.use(cors());
@@ -40,48 +40,41 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-// Função para executar o script Python
-function converteimagempdf(imagePath, outputPdfpath) {
+// Função para executar o script Python para múltiplos arquivos
+function converteimagempdf(imagePaths, outputPdfPath) {
     return new Promise((resolve, reject) => {
-        // Caminho correto para o script Python (considerando que server.js está em backend)
-        const scriptPath = path.join(__dirname, 'conversores', 'img-pdf.py');
-        
-        // Verificação para garantir que o caminho está correto
-        console.log('Caminho do script Python:', scriptPath);
+        const scriptPath = path.join(__dirname, 'conversores', 'img-pdf.py'); // Nome do script Python
 
-        // Comando para rodar o script Python
-        const command = `python "${scriptPath}" "${imagePath}" "${outputPdfpath}"`;
+        const command = `python "${scriptPath}" ${imagePaths.map(path => `"${path}"`).join(' ')} "${outputPdfPath}"`;
+
+        console.log('Comando gerado:', command);
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
                 reject(`Erro ao executar o script Python: ${stderr}`);
             } else {
-                resolve(stdout); // Retorna a saída do script Python
+                resolve(stdout);
             }
         });
     });
 }
-// Endpoint de upload
-app.post('/uploads', upload.single('file'), async (req, res) => {
-    if (!req.file) {
+
+// Endpoint para upload de múltiplos arquivos
+app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
+    if (!req.files || req.files.length === 0) {
         return res.status(400).send('Nenhum arquivo enviado.');
     }
-
     try {
-        const uploadedImagePath = req.file.path;
-        const pdfFilename = req.file.filename.replace(/\.[^/.]+$/, '.pdf'); // Substitui a extensão para .pdf
-        const pdfPath = path.join(uploadDir, pdfFilename);
+        const imagePaths = req.files.map(file => file.path); // Caminhos dos arquivos enviados
+        const outputPdfPath = path.join(uploadDir, 'output.pdf');
 
-        // Chama a função para converter a imagem em PDF
-        await converteimagempdf(uploadedImagePath, pdfPath);
+        // Chama o script Python para converter múltiplos arquivos
+        await converteimagempdf(imagePaths, outputPdfPath);
 
-        // Resposta bem-sucedida
-        res.status(200).send(`Arquivo ${pdfFilename} gerado com sucesso.`);
-
+        res.status(200).json({ message: [`PDF gerado com sucesso: ${outputPdfPath}`] });
     } catch (error) {
-        // Resposta com erro
-        console.error('Erro na conversão para PDF:', error);
-        res.status(500).send('Erro ao converter a imagem para PDF.');
+        console.error('Erro ao gerar PDF:', error);
+        res.status(500).send('Erro ao converter arquivos.');
     }
 });
 
