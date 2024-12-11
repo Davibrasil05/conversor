@@ -1,0 +1,2 @@
+Bom fizemos o banckend onde a ideia é usar a api de upload onde vai servir para todos os 
+arquivos, e desse backend enviamos para os conversores onde pode ter imagem para pdf e assim por diante 
