@@ -29,7 +29,6 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    // Tipos de arquivos permitidos
     const allowedTypes = ['image/jpeg', 'image/png'];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
@@ -65,8 +64,11 @@ app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
         return res.status(400).send('Nenhum arquivo enviado.');
     }
     try {
-        const imagePaths = req.files.map(file => file.path); // Caminhos dos arquivos enviados
-        const outputPdfPath = path.join(uploadDir, 'output.pdf');
+        const imagePaths = req.files.map(file => file.path);
+
+        // Define um nome único para o arquivo PDF
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const outputPdfPath = path.join(uploadDir, `output-${uniqueSuffix}.pdf`);
 
         // Chama o script Python para converter múltiplos arquivos
         await converteimagempdf(imagePaths, outputPdfPath);
