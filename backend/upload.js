@@ -86,7 +86,7 @@ app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
         res.status(500).send('Erro ao converter arquivos.');
     }
 });
-
+//Tá feliz thiago?
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
