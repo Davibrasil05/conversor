@@ -23,18 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: formData,
             });
            
-       console.log(response)
             if (response.ok) {
-             const result = await response.json();
-             const downloadLink = `http://localhost:3001${result.url}`;
-             const linkElement = document.createElement('a');
-             linkElement.href = downloadLink;
-            linkElement.innerText = 'Clique aqui para baixar o PDF gerado';
-            linkElement.download = 'output.pdf';
-            downloadLink.appendChild(linkElement);
-            showAlert('PDF gerado com sucesso!', 'success');
+                const result = await response.json();
+                const downloadLink = `http://localhost:3001${result.url}`;
+                const linkElement = document.createElement('a');
+                linkElement.href = downloadLink;
+                linkElement.innerText = 'Clique aqui para baixar o PDF gerado';
+                linkElement.download = 'output.pdf';
+                document.body.appendChild(linkElement);
+                showAlert('PDF gerado com sucesso!', 'success');
             } else {
-                console.log('não deu certo')
                 const errorMessage = await response.text();
                 showAlert(errorMessage, 'danger');
             }
