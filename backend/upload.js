@@ -4,6 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const { exec } = require('child_process');
+const { uploadToS3 } = require('./services/s3Services');
+
 
 const app = express();
 const PORT = 3001;
@@ -39,9 +41,6 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-// Configura a pasta "uploads" como pública
-app.use('/uploads', express.static(uploadDir));
-
 // Função para executar o script Python para múltiplos arquivos
 function converteimagempdf(imagePaths, outputPdfPath) {
     return new Promise((resolve, reject) => {
@@ -66,6 +65,7 @@ app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).send('Nenhum arquivo enviado.');
     }
+
     try {
         const imagePaths = req.files.map(file => file.path);
 
@@ -76,17 +76,25 @@ app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
         // Chama o script Python para converter múltiplos arquivos
         await converteimagempdf(imagePaths, outputPdfPath);
 
-        res.status(200).json({ 
-            message: 'PDF gerado com sucesso!', 
-            url: `/uploads/${path.basename(outputPdfPath)}` // Adiciona a URL correta
+        // Faz o upload do PDF gerado para o S3
+        const s3Url = await uploadToS3(outputPdfPath, `output-${uniqueSuffix}.pdf`);
+
+        // Retorna a URL pública do S3 para o cliente
+        res.status(200).json({
+            message: 'PDF gerado com sucesso!',
+            url: s3Url, // URL pública do arquivo no S3
         });
-        
+
+        // Opcional: Remove o arquivo local após o upload para o S3
+        fs.unlinkSync(outputPdfPath);
+        imagePaths.forEach(path => fs.unlinkSync(path));
+
     } catch (error) {
-        console.error('Erro ao gerar PDF:', error);
+        console.error('Erro ao gerar PDF ou fazer upload:', error);
         res.status(500).send('Erro ao converter arquivos.');
     }
 });
-//Tá feliz thiago?
+
 // Inicia o servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
