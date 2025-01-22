@@ -17,6 +17,11 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
+const uploadCompressDir = path.join(__dirname,'uploadsCompress');
+if(!fs.existsSync(uploadCompressDir)){
+    fs.mkdirSync(uploadCompressDir)
+}
+
 // Configuração do multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -41,6 +46,7 @@ const upload = multer({ storage, fileFilter });
 
 // Configura a pasta "uploads" como pública
 app.use('/uploads', express.static(uploadDir));
+app.use('/uploadsCompress', express.static(uploadCompressDir))
 
 // Função para executar o script Python para múltiplos arquivos
 function converteimagempdf(imagePaths, outputPdfPath) {
@@ -61,6 +67,51 @@ function converteimagempdf(imagePaths, outputPdfPath) {
     });
 }
 
+function comprimiImage (imagePaths,imgcomprimido){
+    return new Promise((resolve,reject)=>{
+        const scriptPath = path.join(__dirname, 'conversores', 'compressorImage.py');
+   console.log(scriptPath)
+        const command = `python "${scriptPath}" "${imagePaths}" "${imgcomprimido}"`;
+
+         console.log('funcinou')
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(`Erro ao executar o script Python: ${stderr}`);
+            } else {
+                resolve(stdout);
+            }
+        });
+    })
+
+
+}
+app.post('/upload-compress', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).send('Nenhum arquivo enviado.');
+    }
+
+    try {
+        const imCompressPath = req.file.path; // Caminho do arquivo enviado
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const imgComprees = path.join(uploadCompressDir, `image-${uniqueSuffix}.jpg`); // Caminho da imagem comprimida
+        console.log(imCompressPath)
+        console.log('chamando a função ')
+
+        // Chamando o script Python com um único arquivo de entrada
+        await comprimiImage(imCompressPath, imgComprees);
+
+        if (!fs.existsSync(imgComprees)) {
+            throw new Error('Arquivo comprimido não foi salvo.');
+        }
+        res.status(200).json({ 
+            message: 'Imagem comprimida com sucesso!', 
+            url: `/uploadsCompress/${path.basename(imgComprees)}` 
+        });
+    } catch (error) {
+        console.error('Erro ao comprimir imagem:', error);
+        res.status(500).send('Erro ao comprimir imagem.');
+    }
+});
 // Endpoint para upload de múltiplos arquivos
 app.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
     if (!req.files || req.files.length === 0) {
